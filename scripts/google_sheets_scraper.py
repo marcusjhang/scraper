@@ -1,6 +1,8 @@
 from googleapiclient.discovery import build
 from google.oauth2.service_account import Credentials
 import os
+import requests
+from bs4 import BeautifulSoup
 
 # Setup the Sheets API
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
@@ -15,7 +17,7 @@ service = build('sheets', 'v4', credentials=creds)
 
 # The ID and range of the spreadsheet
 SPREADSHEET_ID = '17dztvP9yD1XQhPfhe8uhnQkYc8QVuTKYPwmrH2LdZfc'  # Use the correct spreadsheet ID
-RANGE_NAME = 'SCHOLARSHIPS TO INTERNATIONAL STUDENTS!B3:B127'  # Ensure this matches your sheet name and range
+RANGE_NAME = 'SCHOLARSHIPS TO INTERNATIONAL STUDENTS!B3:B5'  # Ensure this matches your sheet name and range
 
 print(f"Spreadsheet ID: {SPREADSHEET_ID}")
 print(f"Range: {RANGE_NAME}")
@@ -46,7 +48,23 @@ try:
 
     # Extract URLs only
     urls = [link for _, link in combined_data]
-    print(urls)
+
+    scraped_data = []
+    for url in urls:
+        if url:
+            try:
+                response = requests.get(url)
+                soup = BeautifulSoup(response.content, 'html.parser')
+                h1 = soup.find('h1').text.strip() if soup.find('h1') else 'No H1 Found'
+                scraped_data.append({'url': url, 'h1': h1})
+            except Exception as e:
+                scraped_data.append({'url': url, 'h1': f'Error: {e}'})
+        else:
+            scraped_data.append({'url': 'No URL', 'h1': 'No H1 Found'})
+
+    # Print the scraped data
+    for data in scraped_data:
+        print(data)
 
 except ValueError as err:
     print(f"Value error: {err}")
