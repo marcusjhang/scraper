@@ -1,6 +1,6 @@
 ## To run website locally
 
-MAY NEED TO RUN npm install when needed
+run npm install when needed
 1. cd backend
 2. node index.js 
 - server is run on 5001
