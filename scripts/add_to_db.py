@@ -2,13 +2,13 @@ import psycopg2
 
 # Define the example entry
 example_entry = {
-    "name": "International Student Scholarship",
+    "name": "New Student Scholarship",
     "description": "A scholarship for international students.",
     "eligibility": "Open to all international students.",
-    "country": "United States",
-    "field_of_study": "Engineering",
-    "degree_level": "Undergraduate",
-    "application_deadline": "2023-12-31",
+    "country": "Singapore",
+    "field_of_study": "Computer Science",
+    "degree_level": "Masters",
+    "application_deadline": "2023-12-30",
     "link": "http://example.com/scholarship"
 }
 
@@ -17,7 +17,7 @@ try:
     conn = psycopg2.connect(
         dbname="scholarships_db",
         user="postgres",
-        password="Password",  # postgres password
+        password="password",  # postgres password
         host="localhost",
         port="5432"
     )
@@ -42,6 +42,7 @@ try:
 
     # Commit the transaction
     conn.commit()
+    print("Transaction committed.")
 
     # Fetch the generated scholarship_id
     scholarship_id = cursor.fetchone()[0]
@@ -49,6 +50,29 @@ try:
 
 except Exception as error:
     print(f"Error: {error}")
+finally:
+    if cursor:
+        cursor.close()
+    if conn:
+        conn.close()
+
+# Verify insertion
+try:
+    conn = psycopg2.connect(
+        dbname="scholarships_db",
+        user="postgres",
+        password="password",  # postgres password
+        host="localhost",
+        port="5432"
+    )
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM scholarships;")
+    rows = cursor.fetchall()
+    print("Data in scholarships table:")
+    for row in rows:
+        print(row)
+except Exception as error:
+    print(f"Error during verification: {error}")
 finally:
     if cursor:
         cursor.close()

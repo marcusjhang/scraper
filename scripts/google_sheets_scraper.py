@@ -1,8 +1,11 @@
+#TODO: Automate scraping process
+
 from googleapiclient.discovery import build
 from google.oauth2.service_account import Credentials
 import os
 import requests
 from bs4 import BeautifulSoup
+import uuid # random id generator
 
 # Setup the Sheets API
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
@@ -46,23 +49,39 @@ try:
                 link = link_data[0].get('hyperlink', '')
         combined_data.append((row[0], link))
 
+    def scrape_scholarship_details(url):
+        try:
+            response = requests.get(url)
+            soup = BeautifulSoup(response.content, 'html.parser')
+
+            scholarship_details = {
+                "scholarship_id": str(uuid.uuid4()),
+                "name": soup.find('h1').text.strip() if soup.find('h1') else 'No Name Found',
+                "description": soup.find('p').text.strip() if soup.find('p') else 'No Description Found',
+                "eligibility": 'Eligibility criteria not found',  # Placeholder, customize as needed
+                "country": 'Country not found',  # Placeholder, customize as needed
+                "field_of_study": 'Field of study not found',  # Placeholder, customize as needed
+                "degree_level": 'Degree level not found',  # Placeholder, customize as needed
+                "application_deadline": 'Deadline not found',  # Placeholder, customize as needed
+                "link": url
+            }
+            return scholarship_details
+
+        except Exception as e:
+            return {"error": str(e)}
+
     # Extract URLs only
     urls = [link for _, link in combined_data]
 
     scraped_data = []
     for url in urls:
         if url:
-            try:
-                response = requests.get(url)
-                soup = BeautifulSoup(response.content, 'html.parser')
-                h1 = soup.find('h1').text.strip() if soup.find('h1') else 'No H1 Found'
-                scraped_data.append({'url': url, 'h1': h1})
-            except Exception as e:
-                scraped_data.append({'url': url, 'h1': f'Error: {e}'})
+            details = scrape_scholarship_details(url)
+            scraped_data.append(details)
         else:
-            scraped_data.append({'url': 'No URL', 'h1': 'No H1 Found'})
+            scraped_data.append({"error": "No URL provided"})
 
-    # Print the scraped data
+    # Print the scraped data in JSON format
     for data in scraped_data:
         print(data)
 
@@ -71,3 +90,4 @@ except ValueError as err:
 
 except IndexError as err:
     print(f"Index error: {err}")
+
